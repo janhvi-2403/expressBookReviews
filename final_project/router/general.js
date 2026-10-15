@@ -1,92 +1,104 @@
+
 const express = require('express');
-let books = require("./booksdb.js");
-let isValid = require("./auth_users.js").isValid;
-let users = require("./auth_users.js").users;
+const axios = require('axios');
+
+const isValid = require('./auth_users.js').isValid;
+const users = require('./auth_users.js').users;
 
 const public_users = express.Router();
 
+// External book API
+const API_URL = 'https://book-review-api.onrender.com';
+
 // Register a new user
-public_users.post("/register", (req, res) => {
+public_users.post('/register', (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({
-      message: "Username and password are required"
+      message: 'Username and password are required'
     });
   }
 
   if (isValid(username)) {
     return res.status(409).json({
-      message: "Username already exists"
+      message: 'Username already exists'
     });
   }
 
   users.push({ username, password });
 
   return res.status(201).json({
-    message: "User successfully registered"
+    message: 'User successfully registered'
   });
 });
 
-// Get the list of all books
+// Get all books using Axios and async/await
 public_users.get('/', async (req, res) => {
   try {
-    return res.status(200).json(books);
+    const response = await axios.get(`${API_URL}/`);
+    return res.status(200).json(response.data);
   } catch (error) {
     return res.status(500).json({
-      message: "Error retrieving books"
+      message: 'Error retrieving books'
     });
   }
 });
 
-// Get book details based on ISBN
+// Get a book by ISBN
 public_users.get('/isbn/:isbn', async (req, res) => {
-  const isbn = req.params.isbn;
-  const book = books[isbn];
-
-  if (!book) {
-    return res.status(404).json({
-      message: "Book not found"
+  try {
+    const response = await axios.get(
+      `${API_URL}/isbn/${encodeURIComponent(req.params.isbn)}`
+    );
+    return res.status(200).json(response.data);
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({
+      message: 'Error retrieving book by ISBN'
     });
   }
-
-  return res.status(200).json(book);
 });
 
-// Get book details based on author
+// Get books by author
 public_users.get('/author/:author', async (req, res) => {
-  const author = req.params.author.toLowerCase();
-
-  const result = Object.values(books).filter(
-    book => book.author.toLowerCase() === author
-  );
-
-  return res.status(200).json(result);
-});
-
-// Get books based on title
-public_users.get('/title/:title', async (req, res) => {
-  const title = req.params.title.toLowerCase();
-
-  const result = Object.values(books).filter(
-    book => book.title.toLowerCase().includes(title)
-  );
-
-  return res.status(200).json(result);
-});
-
-// Get book reviews based on ISBN
-public_users.get('/review/:isbn', (req, res) => {
-  const isbn = req.params.isbn;
-  const book = books[isbn];
-
-  if (!book) {
-    return res.status(404).json({
-      message: "Book not found"
+  try {
+    const response = await axios.get(
+      `${API_URL}/author/${encodeURIComponent(req.params.author)}`
+    );
+    return res.status(200).json(response.data);
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({
+      message: 'Error retrieving books by author'
     });
   }
+});
 
-  return res.status(200).json(book.reviews);
+// Get books by title
+public_users.get('/title/:title', async (req, res) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/title/${encodeURIComponent(req.params.title)}`
+    );
+    return res.status(200).json(response.data);
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({
+      message: 'Error retrieving books by title'
+    });
+  }
+});
+
+// Get reviews by ISBN from the external API
+public_users.get('/review/:isbn', async (req, res) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/review/${encodeURIComponent(req.params.isbn)}`
+    );
+    return res.status(200).json(response.data);
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({
+      message: 'Error retrieving reviews'
+    });
+  }
 });
 
 module.exports.general = public_users;
