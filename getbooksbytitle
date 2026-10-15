@@ -1,0 +1,10 @@
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 69
+ETag: W/"45-O7hLzEuskUk3HfwJZXpwEzAzgXQ"
+Date: Thu, 15 Oct 2026 14:41:27 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+[{"author":"Jane Austen","title":"Pride and Prejudice","reviews":{}}]
